@@ -9,21 +9,13 @@ def main():
         server.listen(1)
 
         while True:
-            try:
-                conn, address = server.accept()
-            except KeyboardInterrupt:
-                print('Closed by user')
-                return
+            conn, address = server.accept()
             with conn:
-                print('Connected by {}'.format(address))
+                print('{} connected'.format(address))
                 while True:
-                    try:
-                        data = conn.recv(1024)
-                    except KeyboardInterrupt:
-                        print('Closed by user')
-                        return
+                    data = conn.recv(1024)
                     if not data:
-                        print('Connection closed by client {}'.format(address))
+                        print('Connection closed by {}'.format(address))
                         break
                     else:
                         if data == b'close':

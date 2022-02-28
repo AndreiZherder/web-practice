@@ -7,17 +7,13 @@ def main():
         conn.connect(address)
         print('Connected to {}:{}'.format(address[0], address[1]))
         while True:
-            try:
-                data = input('Enter data: ').encode()
-                conn.sendall(data)
-                data = conn.recv(1024)
-                if not data:
-                    print('Connection closed by server')
-                    break
-                print(data.decode())
-            except KeyboardInterrupt:
-                print('Closed by user')
-                return
+            data = input('Enter data: ').encode()
+            conn.sendall(data)
+            data = conn.recv(1024)
+            if not data:
+                print('Connection closed by server')
+                break
+            print(data.decode())
 
 
 if __name__ == '__main__':
