@@ -11,15 +11,15 @@ def main():
         while True:
             conn, address = server.accept()
             with conn:
-                print('{} connected'.format(address))
+                print('{}:{} connected'.format(address[0], address[1]))
                 while True:
                     data = conn.recv(1024)
                     if not data:
-                        print('Connection closed by {}'.format(address))
+                        print('Connection closed by {}:{}'.format(address[0], address[1]))
                         break
                     else:
                         if data == b'close':
-                            print('Connection closed due to close command from {}'.format(address))
+                            print('Received close command from {}:{}. Connection closed'.format(address[0], address[1]))
                             break
                         else:
                             print(data.decode())

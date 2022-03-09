@@ -8,12 +8,13 @@ def main():
         print('Connected to {}:{}'.format(address[0], address[1]))
         while True:
             data = input('Enter data: ').encode()
-            conn.sendall(data)
-            data = conn.recv(1024)
-            if not data:
-                print('Connection closed by server')
-                break
-            print(data.decode())
+            if data:
+                conn.sendall(data)
+                data = conn.recv(1024)
+                if not data:
+                    print('Connection closed by server')
+                    break
+                print(data.decode())
 
 
 if __name__ == '__main__':
