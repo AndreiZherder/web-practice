@@ -7,7 +7,7 @@ import sys
 def run_server(port: int):
     with socket.socket() as server:
         server.bind(('', port))
-        server.listen()
+        server.listen(10)
         serve_forever(server)
 
 
