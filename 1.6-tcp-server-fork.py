@@ -43,13 +43,16 @@ def serve_client(client: socket, cid: int) -> int:
 
 
 def read_request(client: socket) -> bytes:
-    return client.recv(1024)
+    try:
+        return client.recv(1024)
+    except ConnectionResetError:
+        return b''
 
 
 def handle_request(cid: int, request: bytes) -> bytes:
     s = request.decode()
     print('Client #{} request: {}'.format(cid, s))
-    return s.upper().encode()
+    return request
 
 
 def write_response(client: socket, response: bytes):
