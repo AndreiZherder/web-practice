@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-import socket, os
+import os
+import socket
 import sys
 
 
