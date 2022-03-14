@@ -25,21 +25,20 @@ def serve_forever(server: socket):
 
 
 def serve_client(client: socket, cid: int) -> int:
-    child_pid = os.fork()
-    if child_pid == 0:  # child process
-        while True:
-            request = read_request(client)
-            if not request:
-                print('Client #{} disconnected'.format(cid))
-                break
-            if request == b'close':
-                print('Client #{} sent close command. Connection closed'.format(cid))
-                break
-            response = handle_request(cid, request)
-            write_response(client, response)
-        client.close()
-        sys.exit()
-    client.close()
+    with client:
+        child_pid = os.fork()
+        if child_pid == 0:  # child process
+            while True:
+                request = read_request(client)
+                if not request:
+                    print('Client #{} disconnected'.format(cid))
+                    break
+                if request == b'close':
+                    print('Client #{} sent close command. Connection closed'.format(cid))
+                    break
+                response = handle_request(cid, request)
+                write_response(client, response)
+            sys.exit()
     return child_pid
 
 
@@ -53,7 +52,7 @@ def read_request(client: socket) -> bytes:
 def handle_request(cid: int, request: bytes) -> bytes:
     s = request.decode()
     print('Client #{} request: {}'.format(cid, s))
-    return request
+    return s.upper().encode()
 
 
 def write_response(client: socket, response: bytes):
