@@ -5,6 +5,7 @@ import socket
 
 def run_server(port: int):
     with socket.socket() as server:
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('', port))
         server.listen()
         serve_forever(server)

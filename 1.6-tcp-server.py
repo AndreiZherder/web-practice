@@ -5,6 +5,7 @@ import socket
 
 def main():
     with socket.socket() as server:
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('', 2222))
         server.listen(1)
 
