@@ -13,7 +13,7 @@ def run_server(port: int):
         serve_forever(server)
 
 
-def serve_forever(server: socket):
+def serve_forever(server: socket.socket):
     children = set()
     while True:
         client, address = server.accept()
@@ -23,7 +23,7 @@ def serve_forever(server: socket):
         reap_children(children)
 
 
-def serve_client(client: socket) -> int:
+def serve_client(client: socket.socket) -> int:
     with client:
         child_pid = os.fork()
         if child_pid == 0:  # child process
@@ -41,20 +41,20 @@ def serve_client(client: socket) -> int:
     return child_pid
 
 
-def read_request(client: socket) -> bytes:
+def read_request(client: socket.socket) -> bytes:
     try:
         return client.recv(1024)
     except ConnectionResetError:
         return b''
 
 
-def handle_request(client: socket, request: bytes) -> bytes:
+def handle_request(client: socket.socket, request: bytes) -> bytes:
     s = request.decode()
     print('Client #{} request: {}'.format(client.getpeername(), s))
     return s.upper().encode()
 
 
-def write_response(client: socket, response: bytes):
+def write_response(client: socket.socket, response: bytes):
     client.sendall(response)
 
 

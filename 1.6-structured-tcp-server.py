@@ -11,14 +11,14 @@ def run_server(port: int):
         serve_forever(server)
 
 
-def serve_forever(server: socket):
+def serve_forever(server: socket.socket):
     while True:
         client, address = server.accept()
         print('Client #{} connected'.format(client.getpeername()))
         serve_client(client)
 
 
-def serve_client(client: socket):
+def serve_client(client: socket.socket):
     with client:
         while True:
             request = read_request(client)
@@ -32,20 +32,20 @@ def serve_client(client: socket):
             write_response(client, response)
 
 
-def read_request(client: socket) -> bytes:
+def read_request(client: socket.socket) -> bytes:
     try:
         return client.recv(1024)
     except ConnectionResetError:
         return b''
 
 
-def handle_request(client: socket, request: bytes) -> bytes:
+def handle_request(client: socket.socket, request: bytes) -> bytes:
     s = request.decode()
     print('Client #{} request: {}'.format(client.getpeername(), s))
     return s.upper().encode()
 
 
-def write_response(client: socket, response: bytes):
+def write_response(client: socket.socket, response: bytes):
     client.sendall(response)
 
 
