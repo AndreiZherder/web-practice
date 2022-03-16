@@ -14,30 +14,28 @@ def run_server(port: int):
 
 
 def serve_forever(server: socket):
-    cid = 0
     children = set()
     while True:
         client, address = server.accept()
-        print('Client #{} ({}:{}) connected'.format(cid, address[0], address[1]))
-        child_pid = serve_client(client, cid)
+        print('Client #{} connected'.format(client.getpeername()))
+        child_pid = serve_client(client)
         children.add(child_pid)
         reap_children(children)
-        cid += 1
 
 
-def serve_client(client: socket, cid: int) -> int:
+def serve_client(client: socket) -> int:
     with client:
         child_pid = os.fork()
         if child_pid == 0:  # child process
             while True:
                 request = read_request(client)
                 if not request:
-                    print('Client #{} disconnected'.format(cid))
+                    print('Client #{} disconnected'.format(client.getpeername()))
                     break
                 if request == b'close':
-                    print('Client #{} sent close command. Connection closed'.format(cid))
+                    print('Client #{} sent close command. Connection closed'.format(client.getpeername()))
                     break
-                response = handle_request(cid, request)
+                response = handle_request(client, request)
                 write_response(client, response)
             sys.exit()
     return child_pid
@@ -50,9 +48,9 @@ def read_request(client: socket) -> bytes:
         return b''
 
 
-def handle_request(cid: int, request: bytes) -> bytes:
+def handle_request(client: socket, request: bytes) -> bytes:
     s = request.decode()
-    print('Client #{} request: {}'.format(cid, s))
+    print('Client #{} request: {}'.format(client.getpeername(), s))
     return s.upper().encode()
 
 
