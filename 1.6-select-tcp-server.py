@@ -8,7 +8,6 @@ class Server:
     def __init__(self, port: int):
         self.port = port
         self.inputs = set()
-        self.outputs = dict()
 
     def run_server(self):
         with socket.socket() as server:
@@ -17,28 +16,26 @@ class Server:
             server.listen()
             self.serve_forever(server)
 
-    def serve_forever(self, server: socket):
+    def serve_forever(self, server: socket.socket):
         self.inputs = {server}
-        self.outputs = dict()
         while True:
-            inputs_ready, outputs_ready, _ = select(self.inputs, self.outputs, [])
+            inputs_ready, _, _ = select(self.inputs, [], [])
             for socket in inputs_ready:
                 if socket == server:
-                    client, address = server.accept()
-                    print('Client #{} connected'.format(client.getpeername()))
-                    self.inputs.add(client)
+                    self.accept_connection(server)
                 else:
                     try:
                         self.serve_client(socket)
                     except ConnectionResetError:
                         socket.close()
                         self.inputs.discard(socket)
-            for client in outputs_ready:
-                if client in self.outputs:
-                    self.write_response(client)
-                    del self.outputs[client]
 
-    def serve_client(self, client: socket):
+    def accept_connection(self, server: socket.socket):
+        client, address = server.accept()
+        print('Client #{} connected'.format(client.getpeername()))
+        self.inputs.add(client)
+
+    def serve_client(self, client: socket.socket):
         request = self.read_request(client)
         if not request:
             print('Client #{} disconnected'.format(client.getpeername()))
@@ -47,24 +44,21 @@ class Server:
             print('Client #{} sent close command. Connection closed'.format(client.getpeername()))
             raise ConnectionResetError
         response = self.handle_request(client, request)
-        self.prepare_response(client, response)
+        self.write_response(client, response)
 
-    def read_request(self, client: socket) -> bytes:
+    def read_request(self, client: socket.socket) -> bytes:
         try:
             return client.recv(1024)
         except ConnectionResetError:
             return b''
 
-    def handle_request(self, client: socket, request: bytes) -> bytes:
+    def handle_request(self, client: socket.socket, request: bytes) -> bytes:
         s = request.decode()
         print('Client #{} request: {}'.format(client.getpeername(), s))
         return s.upper().encode()
 
-    def prepare_response(self, client: socket, response: bytes):
-        self.outputs[client] = response
-
-    def write_response(self, client: socket):
-        client.sendall(self.outputs[client])
+    def write_response(self, client: socket.socket, response: bytes):
+        client.sendall(response)
 
 
 def main():
