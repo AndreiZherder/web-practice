@@ -1,15 +1,15 @@
 #!/usr/bin/python3
 
 import socket
+import selectors
 from collections import deque
-from select import select
+
 
 class Server:
     def __init__(self, port: int):
         self.port = port
-        self.inputs = {}
-        self.outputs = {}
         self.tasks = deque()
+        self.selector = selectors.DefaultSelector()
 
     def run_server(self):
         with socket.socket() as server:
@@ -24,22 +24,18 @@ class Server:
             while self.tasks:
                 task = self.tasks.popleft()
                 try:
-                    reason, socket = next(task)
-                    if reason == 'read':
-                        self.inputs[socket] = task
-                    if reason == 'write':
-                        self.outputs[socket] = task
+                    events, socket = next(task)
+                    self.selector.register(fileobj=socket, events=events, data=task)
                 except StopIteration:
                     pass
-            inputs_ready, outputs_ready, _ = select(self.inputs, self.outputs, [])
-            for socket in inputs_ready:
-                self.tasks.append(self.inputs.pop(socket))
-            for socket in outputs_ready:
-                self.tasks.append(self.outputs.pop(socket))
+            for k, events in self.selector.select():
+                self.selector.unregister(k.fileobj)
+                task = k.data
+                self.tasks.append(task)
 
     def accept_connection(self, server: socket.socket):
         while True:
-            yield 'read', server
+            yield selectors.EVENT_READ, server
             client, address = server.accept()
             print('Client #{} connected'.format(client.getpeername()))
             self.tasks.append(self.serve_client(client))
@@ -47,7 +43,7 @@ class Server:
     def serve_client(self, client: socket.socket):
         with client:
             while True:
-                yield 'read', client
+                yield selectors.EVENT_READ, client
                 request = self.read_request(client)
                 if not request:
                     print('Client #{} disconnected'.format(client.getpeername()))
@@ -56,7 +52,7 @@ class Server:
                     print('Client #{} sent close command. Connection closed'.format(client.getpeername()))
                     break
                 response = self.handle_request(client, request)
-                yield 'write', client
+                yield selectors.EVENT_WRITE, client
                 self.write_response(client, response)
 
     def read_request(self, client: socket.socket) -> bytes:
