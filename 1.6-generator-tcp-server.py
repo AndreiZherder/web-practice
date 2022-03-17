@@ -4,7 +4,6 @@ import socket
 from collections import deque
 from select import select
 
-
 class Server:
     def __init__(self, port: int):
         self.port = port
@@ -22,21 +21,21 @@ class Server:
     def serve_forever(self, server: socket.socket):
         self.tasks.append(self.accept_connection(server))
         while True:
-            if not self.tasks:
-                inputs_ready, outputs_ready, _ = select(self.inputs, self.outputs, [])
-                for socket in inputs_ready:
-                    self.tasks.append(self.inputs.pop(socket))
-                for socket in outputs_ready:
-                    self.tasks.append(self.outputs.pop(socket))
-            task = self.tasks.popleft()
-            try:
-                reason, socket = next(task)
-                if reason == 'read':
-                    self.inputs[socket] = task
-                if reason == 'write':
-                    self.outputs[socket] = task
-            except StopIteration:
-                pass
+            while self.tasks:
+                task = self.tasks.popleft()
+                try:
+                    reason, socket = next(task)
+                    if reason == 'read':
+                        self.inputs[socket] = task
+                    if reason == 'write':
+                        self.outputs[socket] = task
+                except StopIteration:
+                    pass
+            inputs_ready, outputs_ready, _ = select(self.inputs, self.outputs, [])
+            for socket in inputs_ready:
+                self.tasks.append(self.inputs.pop(socket))
+            for socket in outputs_ready:
+                self.tasks.append(self.outputs.pop(socket))
 
     def accept_connection(self, server: socket.socket):
         while True:
