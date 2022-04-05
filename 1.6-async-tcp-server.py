@@ -19,7 +19,7 @@ def handle_request(request: bytes) -> bytes:
 
 
 async def main():
-    server = await asyncio.start_server(serve_client, host='127.0.0.1', port=2222)
+    server = await asyncio.start_server(serve_client, port=2222)
     async with server:
         await server.serve_forever()
 
