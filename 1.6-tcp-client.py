@@ -3,7 +3,7 @@ import socket
 
 def main():
     with socket.socket() as conn:
-        address = ('185.187.91.100', 2222)
+        address = ('127.0.0.1', 2222)
         conn.connect(address)
         print('Connected to {}:{}'.format(address[0], address[1]))
         while True:
